@@ -2506,8 +2506,13 @@
 			local min = project.systemversion(cfgOrPrj)
 			-- handle special "latest" version
 			if min == "latest" then
-				-- vs2015 and lower can't build against SDK 10
-				min = iif(_ACTION >= "vs2017", m.latestSDK10Version(), nil)
+        if _ACTION >= "vs2019" then
+          -- A fresh empty project in vs2019 skips the minor version
+          min = "10.0"
+        else
+          -- vs2015 and lower can't build against SDK 10
+          min = iif(_ACTION >= "vs2017", m.latestSDK10Version(), nil)
+        end
 			end
 
 			return min
