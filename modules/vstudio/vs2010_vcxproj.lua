@@ -63,8 +63,12 @@
 
 	function m.project(prj)
 		local action = p.action.current()
-		p.push('<Project DefaultTargets="Build" ToolsVersion="%s" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">',
-			action.vstudio.toolsVersion)
+    if _ACTION >= "vs2019" then
+      p.push('<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">')
+    else
+      p.push('<Project DefaultTargets="Build" ToolsVersion="%s" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">',
+             action.vstudio.toolsVersion)
+    end
 	end
 
 
