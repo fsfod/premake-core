@@ -225,6 +225,8 @@ int premake_init(lua_State* L)
 	os_getcwd(L);
 	lua_setglobal(L, "_WORKING_DIR");
 
+	lua_setloadhook(L, premake_lualoadhook);
+
 #if !defined(PREMAKE_NO_BUILTIN_SCRIPTS)
 	/* let native modules initialize themselves */
 	registerModules(L);

@@ -6,25 +6,13 @@
 
 #include "premake.h"
 
-
 static int chunk_wrapper(lua_State* L);
-
-
-
-/* Pull in Lua's aux lib implementation, but rename luaL_loadfilex() so I
- * can replace it with my own implementation. */
-
-#define luaL_loadfilex  original_luaL_loadfilex
-#include "lauxlib.c"
-#undef luaL_loadfilex
-
-
 
 /**
  * Extend the default implementation of luaL_loadfile() to call my chunk
  * wrapper, above, before executing any scripts loaded from a file.
  */
-LUALIB_API int luaL_loadfilex (lua_State* L, const char* filename, const char* mode)
+int premake_lualoadhook(lua_State* L, const char* filename, const char* mode)
 {
 	const char* script_dir;
 	const char* test_name;
@@ -76,7 +64,7 @@ LUALIB_API int luaL_loadfilex (lua_State* L, const char* filename, const char* m
 		test_name = lua_tostring(L, -1);
 
 		if (test_name) {
-			z = original_luaL_loadfilex(L, test_name, mode);
+			z = luaL_loadfilex_nohook(L, test_name, mode);
 		}
 
 		/* If the file exists but errors, pass that through */
@@ -108,8 +96,6 @@ LUALIB_API int luaL_loadfilex (lua_State* L, const char* filename, const char* m
 
 	return z;
 }
-
-
 
 /**
  * Execute a chunk of code previously loaded by my customized version of

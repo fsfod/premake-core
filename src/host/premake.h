@@ -190,6 +190,7 @@ typedef struct
 
 extern const buildin_mapping builtin_scripts[];
 extern void  registerModules(lua_State* L);
+int premake_lualoadhook(lua_State* L, const char* filename, const char* mode);
 
 int premake_init(lua_State* L);
 int premake_pcall(lua_State* L, int nargs, int nresults);

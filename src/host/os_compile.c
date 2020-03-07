@@ -5,14 +5,11 @@
  */
 
 #include "premake.h"
-#include "lundump.h"
-#include "lstate.h"
-
-extern int original_luaL_loadfilex(lua_State* L, const char* filename, const char* mode);
+#include "lua.h"
 
 static int writer(lua_State* L, const void* p, size_t size, void* u)
 {
-	UNUSED(L);
+	((void)L);
 	return (fwrite(p, size, 1, (FILE*)u) != 1) && (size != 0);
 }
 
@@ -22,7 +19,7 @@ int os_compile(lua_State* L)
 	const char* output = luaL_checkstring(L, 2);
 	lua_State* P = luaL_newstate();
 
-	if (original_luaL_loadfilex(P, input, NULL) != LUA_OK)
+	if (luaL_loadfilex_nohook(P, input, NULL) != LUA_OK)
 	{
 		const char* msg = lua_tostring(P, -1);
 		if (msg == NULL)

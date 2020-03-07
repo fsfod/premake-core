@@ -6,18 +6,23 @@
 
 #include "premake.h"
 
+#define LUA_PROGNAME	"luajit"  /* Fallback frontend name. */
+#define LUA_PROMPT	"> "	/* Interactive prompt. */
+#define LUA_PROMPT2	">> "	/* Continuation prompt. */
+#define LUA_MAXINPUT	512	/* Max. input line length. */
+
+#define _UNUSED(a)(void)(a)
+
 /* Build on the REPL built into Lua already */
 #define main lua_main
-#include "lua.c"
-
+#include "luajit.c"
 
 /* Based on dotty() in lua.c */
 int debug_prompt(lua_State* L)
 {
 	int status;
 
-	const char* oldProgName = progname;
-	progname = NULL;
+	const char* oldProgName = "luajit";
 
 	while ((status = loadline(L)) != -1) {
 		if (status == 0) {
