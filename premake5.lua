@@ -113,6 +113,9 @@
 		filter { 'system:windows' }
 			platforms   { 'x86', 'x64' }
 
+		filter { 'system:linux' }
+			platforms { "x64" }
+
 		filter "configurations:Debug"
 			defines     "_DEBUG"
 			flags       { "Symbols" }
@@ -132,8 +135,8 @@
 		targetname  "premake5"
 		language    "C"
 		kind        "ConsoleApp"
-		includedirs { "contrib/lua/src", "contrib/luashim" }
-		links       { "lua-lib" }
+		includedirs { "contrib/luajit/src", "contrib/luashim" }
+		links       { "lua" }
 
 		-- optional 3rd party libraries
 		if not _OPTIONS["no-zlib"] then
@@ -204,7 +207,7 @@
 
 	-- optional 3rd party libraries
 	group "contrib"
-		include "contrib/lua"
+		include "contrib/luajit"
 		include "contrib/luashim"
 		
 		if not _OPTIONS["no-zlib"] then
