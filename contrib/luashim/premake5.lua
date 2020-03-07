@@ -4,7 +4,7 @@ project "luashim-lib"
 	warnings    "extra"
 	pic         "on"
 
-	includedirs { "../lua/src" }
+	includedirs { "../luajit/src" }
 
 	files
 	{

@@ -5,7 +5,16 @@
 */
 #include "luashim.h"
 #include <assert.h>
-#include "lstate.h"
+
+#if LUA_VERSION_NUM < 503
+#undef lua_getglobal
+#undef lua_setglobal
+
+#define lua_lock(L)
+#define lua_unlock(L)
+#endif
+
+#if !defined(LUA_BUILD_AS_DLL)
 
 static const LuaFunctionTable_t* g_shimTable;
 
@@ -225,18 +234,6 @@ void lua_pushinteger(lua_State* L, lua_Integer n)
 	g_shimTable->shim_pushinteger(L, n);
 }
 
-const char* lua_pushlstring(lua_State* L, const char* s, size_t len)
-{
-	assert(g_shimTable != NULL);
-	return g_shimTable->shim_pushlstring(L, s, len);
-}
-
-const char* lua_pushstring(lua_State* L, const char* s)
-{
-	assert(g_shimTable != NULL);
-	return g_shimTable->shim_pushstring(L, s);
-}
-
 const char* lua_pushvfstring(lua_State* L, const char* fmt, va_list argp)
 {
 	assert(g_shimTable != NULL);
@@ -283,16 +280,17 @@ int lua_getglobal(lua_State* L, const char* name)
 	return g_shimTable->shim_getglobal(L, name);
 }
 
-int lua_gettable(lua_State* L, int idx)
+#if LUA_VERSION_NUM > 501
+const char* lua_pushlstring(lua_State* L, const char* s, size_t len)
 {
 	assert(g_shimTable != NULL);
-	return g_shimTable->shim_gettable(L, idx);
+	return g_shimTable->shim_pushlstring(L, s, len);
 }
 
-int lua_getfield(lua_State* L, int idx, const char* k)
+const char* lua_pushstring(lua_State* L, const char* s)
 {
 	assert(g_shimTable != NULL);
-	return g_shimTable->shim_getfield(L, idx, k);
+	return g_shimTable->shim_pushstring(L, s);
 }
 
 int lua_geti(lua_State* L, int idx, lua_Integer n)
@@ -301,17 +299,122 @@ int lua_geti(lua_State* L, int idx, lua_Integer n)
 	return g_shimTable->shim_geti(L, idx, n);
 }
 
-int lua_rawget(lua_State* L, int idx)
+int lua_getfield(lua_State* L, int idx, const char* k)
 {
 	assert(g_shimTable != NULL);
-	return g_shimTable->shim_rawget(L, idx);
+	return g_shimTable->shim_getfield(L, idx, k);
 }
 
-int lua_rawgeti(lua_State* L, int idx, lua_Integer n)
+void lua_rawseti(lua_State* L, int idx, lua_Integer n)
 {
 	assert(g_shimTable != NULL);
-	return g_shimTable->shim_rawgeti(L, idx, n);
+	g_shimTable->shim_rawseti(L, idx, n);
 }
+
+int lua_load(lua_State* L, lua_Reader reader, void* dt, const char* chunkname, const char* mode)
+{
+	assert(g_shimTable != NULL);
+	return g_shimTable->shim_load(L, reader, dt, chunkname, mode);
+}
+
+int lua_dump(lua_State* L, lua_Writer writer, void* data, int strip)
+{
+	assert(g_shimTable != NULL);
+	return g_shimTable->shim_dump(L, writer, data, strip);
+}
+
+void lua_sethook(lua_State* L, lua_Hook func, int mask, int count)
+{
+	assert(g_shimTable != NULL);
+	g_shimTable->shim_sethook(L, func, mask, count);
+}
+
+int lua_resume(lua_State* L, lua_State* from, int narg)
+{
+	assert(g_shimTable != NULL);
+	return g_shimTable->shim_resume(L, from, narg);
+}
+
+#else
+
+void lua_pushlstring(lua_State* L, const char* s, size_t len)
+{
+	assert(g_shimTable != NULL);
+	g_shimTable->shim_pushlstring(L, s, len);
+}
+
+void lua_pushstring(lua_State* L, const char* s)
+{
+	assert(g_shimTable != NULL);
+	g_shimTable->shim_pushstring(L, s);
+}
+
+void lua_gettable(lua_State* L, int idx)
+{
+	assert(g_shimTable != NULL);
+	g_shimTable->shim_gettable(L, idx);
+}
+
+void lua_geti(lua_State* L, int idx, lua_Integer n)
+{
+	assert(g_shimTable != NULL);
+	g_shimTable->shim_geti(L, idx, n);
+}
+
+void lua_getfield(lua_State* L, int idx, const char* k)
+{
+	assert(g_shimTable != NULL);
+	g_shimTable->shim_getfield(L, idx, k);
+}
+
+void lua_rawget(lua_State* L, int idx)
+{
+	assert(g_shimTable != NULL);
+	g_shimTable->shim_rawget(L, idx);
+}
+
+void lua_rawgeti(lua_State* L, int idx, int n)
+{
+	assert(g_shimTable != NULL);
+	g_shimTable->shim_rawgeti(L, idx, n);
+}
+
+void lua_rawseti(lua_State* L, int idx, int n)
+{
+	assert(g_shimTable != NULL);
+	g_shimTable->shim_rawseti(L, idx, n);
+}
+
+void lua_seti(lua_State* L, int idx, int n)
+{
+	assert(g_shimTable != NULL);
+	g_shimTable->shim_seti(L, idx, n);
+}
+
+int lua_load(lua_State* L, lua_Reader reader, void* dt, const char* chunkname)
+{
+	assert(g_shimTable != NULL);
+	return g_shimTable->shim_load(L, reader, dt, chunkname);
+}
+
+int lua_dump(lua_State* L, lua_Writer writer, void* data)
+{
+	assert(g_shimTable != NULL);
+	return g_shimTable->shim_dump(L, writer, data);
+}
+
+int lua_sethook(lua_State* L, lua_Hook func, int mask, int count)
+{
+	assert(g_shimTable != NULL);
+	g_shimTable->shim_sethook(L, func, mask, count);
+}
+
+int lua_resume(lua_State* L, int narg)
+{
+	assert(g_shimTable != NULL);
+	return g_shimTable->shim_resume(L, narg);
+}
+#endif
 
 int lua_rawgetp(lua_State* L, int idx, const void* p)
 {
@@ -361,22 +464,10 @@ void lua_setfield(lua_State* L, int idx, const char* k)
 	g_shimTable->shim_setfield(L, idx, k);
 }
 
-void lua_seti(lua_State* L, int idx, lua_Integer n)
-{
-	assert(g_shimTable != NULL);
-	g_shimTable->shim_seti(L, idx, n);
-}
-
 void lua_rawset(lua_State* L, int idx)
 {
 	assert(g_shimTable != NULL);
 	g_shimTable->shim_rawset(L, idx);
-}
-
-void lua_rawseti(lua_State* L, int idx, lua_Integer n)
-{
-	assert(g_shimTable != NULL);
-	g_shimTable->shim_rawseti(L, idx, n);
 }
 
 void lua_rawsetp(lua_State* L, int idx, const void* p)
@@ -409,28 +500,10 @@ int lua_pcallk(lua_State* L, int nargs, int nresults, int errfunc, lua_KContext 
 	return g_shimTable->shim_pcallk(L, nargs, nresults, errfunc, ctx, k);
 }
 
-int lua_load(lua_State* L, lua_Reader reader, void* dt, const char* chunkname, const char* mode)
-{
-	assert(g_shimTable != NULL);
-	return g_shimTable->shim_load(L, reader, dt, chunkname, mode);
-}
-
-int lua_dump(lua_State* L, lua_Writer writer, void* data, int strip)
-{
-	assert(g_shimTable != NULL);
-	return g_shimTable->shim_dump(L, writer, data, strip);
-}
-
 int lua_yieldk(lua_State* L, int nresults, lua_KContext ctx, lua_KFunction k)
 {
 	assert(g_shimTable != NULL);
 	return g_shimTable->shim_yieldk(L, nresults, ctx, k);
-}
-
-int lua_resume(lua_State* L, lua_State* from, int narg)
-{
-	assert(g_shimTable != NULL);
-	return g_shimTable->shim_resume(L, from, narg);
 }
 
 int lua_status(lua_State* L)
@@ -539,12 +612,6 @@ void lua_upvaluejoin(lua_State* L, int fidx1, int n1, int fidx2, int n2)
 {
 	assert(g_shimTable != NULL);
 	g_shimTable->shim_upvaluejoin(L, fidx1, n1, fidx2, n2);
-}
-
-void lua_sethook(lua_State* L, lua_Hook func, int mask, int count)
-{
-	assert(g_shimTable != NULL);
-	g_shimTable->shim_sethook(L, func, mask, count);
 }
 
 lua_Hook lua_gethook(lua_State* L)
@@ -838,3 +905,9 @@ void shimInitialize(lua_State* L)
 
 	lua_unlock(L);
 }
+
+#else
+void shimInitialize(lua_State* L)
+{
+}
+#endif

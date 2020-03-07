@@ -13,6 +13,14 @@
 void luaL_register(lua_State *L, const char *libname, const luaL_Reg *l);
 void shimInitialize(lua_State* L);
 
+#if LUA_VERSION_NUM < 503
+
+/* type for continuation-function contexts */
+typedef ptrdiff_t lua_KContext;
+typedef int(*lua_KFunction) (lua_State *L, int status, lua_KContext ctx);
+
+#endif
+
 typedef struct {
 	void              (*shimL_register)(lua_State *L, const char *libname, const luaL_Reg *l);
 	lua_State*        (*shim_newstate)(lua_Alloc f, void* ud);
@@ -50,19 +58,13 @@ typedef struct {
 	void              (*shim_pushnil)(lua_State* L);
 	void              (*shim_pushnumber)(lua_State* L, lua_Number n);
 	void              (*shim_pushinteger)(lua_State* L, lua_Integer n);
-	const char*       (*shim_pushlstring)(lua_State* L, const char* s, size_t len);
-	const char*       (*shim_pushstring)(lua_State* L, const char* s);
 	const char*       (*shim_pushvfstring)(lua_State* L, const char* fmt, va_list argp);
 	void              (*shim_pushcclosure)(lua_State* L, lua_CFunction fn, int n);
 	void              (*shim_pushboolean)(lua_State* L, int b);
 	void              (*shim_pushlightuserdata)(lua_State* L, void* p);
 	int               (*shim_pushthread)(lua_State* L);
 	int               (*shim_getglobal)(lua_State* L, const char* name);
-	int               (*shim_gettable)(lua_State* L, int idx);
-	int               (*shim_getfield)(lua_State* L, int idx, const char* k);
 	int               (*shim_geti)(lua_State* L, int idx, lua_Integer n);
-	int               (*shim_rawget)(lua_State* L, int idx);
-	int               (*shim_rawgeti)(lua_State* L, int idx, lua_Integer n);
 	int               (*shim_rawgetp)(lua_State* L, int idx, const void* p);
 	void              (*shim_createtable)(lua_State* L, int narr, int nrec);
 	void*             (*shim_newuserdata)(lua_State* L, size_t sz);
@@ -73,16 +75,12 @@ typedef struct {
 	void              (*shim_setfield)(lua_State* L, int idx, const char* k);
 	void              (*shim_seti)(lua_State* L, int idx, lua_Integer n);
 	void              (*shim_rawset)(lua_State* L, int idx);
-	void              (*shim_rawseti)(lua_State* L, int idx, lua_Integer n);
 	void              (*shim_rawsetp)(lua_State* L, int idx, const void* p);
 	int               (*shim_setmetatable)(lua_State* L, int objindex);
 	void              (*shim_setuservalue)(lua_State* L, int idx);
 	void              (*shim_callk)(lua_State* L, int nargs, int nresults, lua_KContext ctx, lua_KFunction k);
 	int               (*shim_pcallk)(lua_State* L, int nargs, int nresults, int errfunc, lua_KContext ctx, lua_KFunction k);
-	int               (*shim_load)(lua_State* L, lua_Reader reader, void* dt, const char* chunkname, const char* mode);
-	int               (*shim_dump)(lua_State* L, lua_Writer writer, void* data, int strip);
 	int               (*shim_yieldk)(lua_State* L, int nresults, lua_KContext ctx, lua_KFunction k);
-	int               (*shim_resume)(lua_State* L, lua_State* from, int narg);
 	int               (*shim_status)(lua_State* L);
 	int               (*shim_isyieldable)(lua_State* L);
 	int               (*shim_gc)(lua_State* L, int what, int data);
@@ -101,7 +99,6 @@ typedef struct {
 	const char*       (*shim_setupvalue)(lua_State* L, int funcindex, int n);
 	void*             (*shim_upvalueid)(lua_State* L, int fidx, int n);
 	void              (*shim_upvaluejoin)(lua_State* L, int fidx1, int n1, int fidx2, int n2);
-	void              (*shim_sethook)(lua_State* L, lua_Hook func, int mask, int count);
 	lua_Hook          (*shim_gethook)(lua_State* L);
 	int               (*shim_gethookmask)(lua_State* L);
 	int               (*shim_gethookcount)(lua_State* L);
@@ -147,6 +144,33 @@ typedef struct {
 	void              (*shimL_pushresult)(luaL_Buffer* B);
 	void              (*shimL_pushresultsize)(luaL_Buffer* B, size_t sz);
 	char*             (*shimL_buffinitsize)(lua_State* L, luaL_Buffer* B, size_t sz);
+
+#if LUA_VERSION_NUM > 501
+	const char*		  (*shim_pushlstring)(lua_State* L, const char* s, size_t len);
+	const char*		  (*shim_pushstring)(lua_State* L, const char* s);
+	int               (*shim_gettable)(lua_State* L, int idx);
+	int               (*shim_getfield)(lua_State* L, int idx, const char* k);
+	int               (*shim_rawget)(lua_State* L, int idx);
+	int               (*shim_rawgeti)(lua_State* L, int idx, lua_Integer n);
+	void              (*shim_rawseti)(lua_State* L, int idx, lua_Integer n);
+	int               (*shim_load)(lua_State* L, lua_Reader reader, void* dt, const char* chunkname, const char* mode);
+	int               (*shim_dump)(lua_State* L, lua_Writer writer, void* data, int strip);
+	int               (*shim_resume)(lua_State* L, lua_State* from, int narg);
+	void              (*shim_sethook)(lua_State* L, lua_Hook func, int mask, int count);
+#else
+	void			  (*shim_pushlstring)(lua_State* L, const char* s, size_t len);
+	void			  (*shim_pushstring)(lua_State* L, const char* s);
+	void              (*shim_gettable)(lua_State* L, int idx);
+	void              (*shim_getfield)(lua_State* L, int idx, const char* k);
+	void              (*shim_rawget)(lua_State* L, int idx);
+	void              (*shim_rawgeti)(lua_State* L, int idx, int n);
+	void              (*shim_rawseti)(lua_State* L, int idx, int n);
+	int               (*shim_load)(lua_State* L, lua_Reader reader, void* dt, const char* chunkname);
+	int               (*shim_dump)(lua_State* L, lua_Writer writer, void* data);
+	int               (*shim_resume)(lua_State* L, int narg);
+	int               (*shim_sethook)(lua_State* L, lua_Hook func, int mask, int count);
+#endif
+
 } LuaFunctionTable_t;
 
 typedef struct ShimExtraData {
