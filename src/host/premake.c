@@ -140,6 +140,7 @@ static const luaL_Reg zip_functions[] = {
 };
 #endif
 
+#if LUA_VERSION_NUM == 503
 
 static void lua_getorcreate_table(lua_State *L, const char *modname)
 {
@@ -169,6 +170,7 @@ void luaL_register(lua_State *L, const char *libname, const luaL_Reg *l)
 	lua_pop(L, 1);
 }
 
+#endif
 
 /**
  * Initialize the Premake Lua environment.
@@ -577,7 +579,7 @@ static int process_arguments(lua_State* L, int argc, const char** argv)
 	for (i = 1; i < argc; ++i)
 	{
 		lua_pushstring(L, argv[i]);
-		lua_rawseti(L, -2, luaL_len(L, -2) + 1);
+		lua_rawseti(L, -2, lua_objlen(L, -2) + 1);
 
 		/* The /scripts option gets picked up here; used later to find the
 		 * manifest and scripts later if necessary */

@@ -81,11 +81,13 @@
 				end
 			else
 				-- convert the token into a function to execute
-				local func
-				func, err = load("return " .. token, nil, 't', e)
-				if not func then
-					return nil, "load error: " .. err
-				end
+			local func, err = loadstring("return " .. token)
+			if not func then
+				return nil, "load error: " .. err
+			end
+
+			-- give the function access to the project objects
+			setfenv(func, e)
 
 				-- run it and get the result
 				success, result = pcall(func)

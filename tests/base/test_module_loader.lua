@@ -16,7 +16,7 @@
 	function suite.setup()
 		table.insert(package.searchers, function (name)
 			p.out(name)
-			return load("")
+			return loadstring("")
 		end)
 		loaderIndex = #package.searchers
 	end
