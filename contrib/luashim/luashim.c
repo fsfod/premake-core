@@ -828,33 +828,12 @@ char* luaL_buffinitsize(lua_State* L, luaL_Buffer* B, size_t sz)
 	return g_shimTable->shimL_buffinitsize(L, B, sz);
 }
 
-static const Node* hashpow2(const Table* t, int n) {
-	int i = lmod(n, sizenode(t));
-	return &t->node[i];
-}
-
-static const Node* findNode(const Table* t, int key) {
-	const Node* n = hashpow2(t, key);
-	while (n->i_key.tvk.value_.i != key)
-	{
-		int nx = n->i_key.nk.next;
-		if (nx == 0)
-			return NULL;
-		n += nx;
-	}
-	return n;
-}
-
 void shimInitialize(lua_State* L)
 {
 	lua_lock(L);
 
-	// Find the 'SHIM' entry in the registry.
-	const Table* reg = hvalue(&G(L)->l_registry);
-	const Node* n = findNode(reg, 0x5348494D); // equal to 'SHIM'
-	assert(n != NULL);
-
-	g_shimTable = (const LuaFunctionTable_t*)n->i_val.value_.p;
+	ShimExtraData* extradata = (ShimExtraData*)lua_getextraspace(L);
+	g_shimTable = extradata->shimTable;
 	assert(g_shimTable != NULL);
 
 	lua_unlock(L);

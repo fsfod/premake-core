@@ -196,8 +196,8 @@ int premake_init(lua_State* L)
 	luaL_register(L, "zip",     zip_functions);
 #endif
 
-	lua_pushlightuserdata(L, &s_shimTable);
-	lua_rawseti(L, LUA_REGISTRYINDEX, 0x5348494D); // equal to 'SHIM'
+	ShimExtraData* extradata = (ShimExtraData*)lua_getextraspace(L);
+	extradata->shimTable = &s_shimTable;
 
 	/* push the application metadata */
 	lua_pushstring(L, LUA_COPYRIGHT);
