@@ -6,7 +6,7 @@
 [subrepo]
 	remote = ..\\LuaJIT
 	branch = premake_core
-	commit = 4691bed4b21339d8a179b59a0da5a646a0482c98
-	parent = 3dec7b820c8a95d033a275e538e78c2d46f56705
+	commit = ee73e5ca76a3e1711d0047716d526effb6a52203
+	parent = f21e499d2b5329705966b7a85f7f25220110b375
 	method = merge
 	cmdver = 0.4.0
