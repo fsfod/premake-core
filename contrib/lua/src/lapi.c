@@ -1180,6 +1180,13 @@ LUA_API void lua_setallocf (lua_State *L, lua_Alloc f, void *ud) {
   lua_unlock(L);
 }
 
+LUA_API lua_Loadfile_Hook lua_getloadhook(lua_State* L) {
+  return  G(L)->loadhook;
+}
+
+LUA_API void lua_setloadhook(lua_State* L, lua_Loadfile_Hook f) {
+  G(L)->loadhook = f;
+}
 
 LUA_API void *lua_newuserdata (lua_State *L, size_t size) {
   Udata *u;

@@ -169,6 +169,7 @@ typedef struct global_State {
   TString *tmname[TM_N];  /* array with tag-method names */
   struct Table *mt[LUA_NUMTAGS];  /* metatables for basic types */
   TString *strcache[STRCACHE_N][STRCACHE_M];  /* cache for strings in API */
+  lua_Loadfile_Hook loadhook; /* Hook for Lua file loading. */
 } global_State;
 
 

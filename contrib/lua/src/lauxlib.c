@@ -25,6 +25,7 @@
 #include "lua.h"
 
 #include "lauxlib.h"
+#include "lstate.h"
 
 
 /*
@@ -700,8 +701,8 @@ static int skipcomment (LoadF *lf, int *cp) {
 }
 
 
-LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
-                                             const char *mode) {
+LUALIB_API int luaL_loadfilex_nohook (lua_State *L, const char *filename,
+                                      const char *mode) {
   LoadF lf;
   int status, readstatus;
   int c;
@@ -733,6 +734,17 @@ LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
   }
   lua_remove(L, fnameindex);
   return status;
+}
+
+LUALIB_API int luaL_loadfilex(lua_State* L, const char* filename,
+                            const char* mode) {
+  if (G(L)->loadhook) {
+    int result = G(L)->loadhook(L, filename, mode);
+    if (result != 1) {
+      return result;
+    }
+  }
+  return luaL_loadfilex_nohook(L, filename, mode);
 }
 
 
