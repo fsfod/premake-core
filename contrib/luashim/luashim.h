@@ -149,4 +149,8 @@ typedef struct {
 	char*             (*shimL_buffinitsize)(lua_State* L, luaL_Buffer* B, size_t sz);
 } LuaFunctionTable_t;
 
+typedef struct ShimExtraData {
+	const LuaFunctionTable_t* shimTable;
+} ShimExtraData;
+
 #endif

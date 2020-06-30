@@ -8,7 +8,11 @@
 
 #include "luashim.h"
 
-static LuaFunctionTable_t s_shimTable = {
+#if defined(_MSC_VER)
+#    pragma warning(disable : 4232)
+#endif 
+
+static const LuaFunctionTable_t s_shimTable = {
 	&luaL_register,
 	&lua_newstate,
 	&lua_close,
