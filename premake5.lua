@@ -112,6 +112,7 @@
 
 		filter { 'system:windows' }
 			platforms   { 'x86', 'x64' }
+			defines 	{ "LUA_BUILD_AS_DLL" }
 
 		filter "configurations:Debug"
 			defines     "_DEBUG"

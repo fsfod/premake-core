@@ -1,6 +1,7 @@
 project "lua-lib"
 	language    "C"
-	kind        "StaticLib"
+	kind        "SharedLib"
+	targetdir 	"%{wks.location}/bin/%{cfg.buildcfg}"
 	warnings    "off"
 
 	includedirs { "src" }
@@ -19,6 +20,9 @@ project "lua-lib"
 		"**.lua",
 		"etc/*.c"
 	}
+
+	filter "system:windows"
+		defines     { "LUA_BUILD_AS_DLL" }
 
 	filter "system:linux or bsd or hurd or aix or solaris or haiku"
 		defines     { "LUA_USE_POSIX", "LUA_USE_DLOPEN" }
