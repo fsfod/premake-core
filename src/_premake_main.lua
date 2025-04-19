@@ -403,7 +403,15 @@
 		m.postAction,
 	}
 
-	function _premake_main()
+	local function main()
 		p.callArray(m.elements)
-		return 0
 	end
+
+  function _premake_main()
+    local success, result = xpcall(main, debug.traceback)
+    if not success then
+      print(result)
+      return 1
+    end
+    return 0
+  end
