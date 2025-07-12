@@ -1,0 +1,45 @@
+name: ubuntu
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/ubuntu.yml'
+      - 'tests/**'
+      - '**/*.lua'
+
+  pull_request:
+    paths:
+      - '.github/workflows/ubuntu.yml'
+      - 'tests/**'
+      - '**/*.lua'
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - uses: mymindstorm/setup-emsdk@v14
+
+    - name: install premake5
+      uses: Jarod42/install-premake5@v6
+
+    - name: apt-get update
+      run: sudo apt-get update -y
+
+    - name: apt-get install ninja-build
+      run: |
+        sudo apt-get install -y ninja-build
+
+    - name: Versions
+      run: |
+        python --version
+        premake5 --version
+        ninja --version
+
+    - name: test projects
+      run: cd tests && python run_tests.py
+
