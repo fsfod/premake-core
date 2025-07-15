@@ -408,7 +408,7 @@
 	end
 
   function _premake_main()
-    local success, result = xpcall(main, debug.traceback)
+    local success, result = xpcall(main, stacktraceplus.stacktrace)
     if not success then
       print(result)
       return 1

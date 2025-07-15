@@ -25,6 +25,7 @@
 		"base/jsonwrapper.lua",
 		"base/languages.lua",
 		"base/term.lua",
+		"base/StackTracePlus.lua",
 
 		-- configuration data
 		"base/field.lua",
