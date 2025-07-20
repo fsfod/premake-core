@@ -293,7 +293,16 @@
 		end
 		--p.escaper(fastbuild.shesc)
 		local buildopt = fastbuild.list(filecfg.buildoptions)
-		local cppflags = fastbuild.list(toolset.getcppflags(filecfg))
+		local cppflags = toolset.getcppflags(filecfg)
+		-- Fix pointlessly generating .d dependency files everywhere that are not needed by Fastbuild
+		if toolset ~= p.tools.msc  then
+			for i=#cppflags,1,-1 do
+				if cppflags[i] == "-MD" or cppflags[i] == "-MP" then
+					table.remove(cppflags, i)
+				end
+			end
+		end
+		cppflags = fastbuild.list(cppflags)
 		local cxxflags = fastbuild.list(toolset.getcxxflags(filecfg))
 		local defines = fastbuild.list(table.join(toolset.getdefines(filecfg.defines, filecfg), toolset.getundefines(filecfg.undefines)))
 		local includes = fastbuild.list(toolset.getincludedirs(cfg, filecfg.includedirs, filecfg.externalincludedirs, filecfg.frameworkdirs, filecfg.includedirsafter))
