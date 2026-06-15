@@ -122,7 +122,12 @@ function m.getflags(cfg, toolset, fcfg, tool)
 		buildoptions = table.join(buildoptions, fcfg.buildoptions)
 	end
 
-	local implicitincludedirs = getstructuredimplicitincludedirs(toolset, fcfg or cfg, tool)
+	local implicitincludedirs = {}
+
+	if _OPTIONS["implicit-includes"] == "On" then
+		implicitincludedirs = getstructuredimplicitincludedirs(toolset, cfg, tool)
+	end
+
 	local explicitincludedirs = toolset.getstructuredincludedirs(cfg, includedirs, externalincludedirs, frameworkdirs, includedirsafter)
 	local allincludedirs = table.join(explicitincludedirs, implicitincludedirs)
 	local allincludedirflags = table.flatten(table.translate(allincludedirs, function(kv)
@@ -207,6 +212,62 @@ function m.getobjectfile(cfg, file, filecfg)
 end
 
 
+local function generateproject(wks, prj, platform, buildcfg, commands)
+	if not p.action.supports(prj.language) then
+		p.warn("Project '%s' has unsupported language '%s', skipping", prj.name, prj.language)
+		return
+	end
+
+	if not p.action.supportsToolset(prj) then
+		p.warn("Project '%s' has unsupported toolset '%s', skipping", prj.name, prj.toolset)
+		return
+	end
+
+	local cfg = p.project.getconfig(prj, buildcfg, platform)
+	if not cfg then
+		cfg = p.project.findClosestMatch(prj, buildcfg, platform)
+	end
+
+	if not cfg then
+		p.error("No configuration found for project '%s' with build configuration '%s' and platform '%s'", prj.name, buildcfg, platform)
+		return
+	end
+
+	p.oven.assignObjectSequences(prj)
+
+	local tr = p.project.getsourcetree(prj)
+	p.tree.traverse(tr, {
+		onleaf = function(node)
+			local filecfg = p.fileconfig.getconfig(node, cfg)
+
+			local args = m.getcompilecommandsarguments(cfg, node.abspath, filecfg)
+			if not args then
+				return
+			end
+
+			local objfile = m.getobjectfile(cfg, node, filecfg)
+			if not objfile then
+				p.warn("Could not determine object file for '%s', skipping", node.abspath)
+				return
+			end
+
+			objfile = path.getabsolute(objfile)
+
+			args = table.join(args, { "-o", objfile })
+
+			local compile_command = {
+				directory = path.getabsolute(prj.location),
+				file = node.abspath,
+				arguments = args,
+				output = objfile,
+			}
+			
+			table.insert(commands, compile_command)
+		end
+	})
+end
+
+
 function m.generate(wks, platform, buildcfg)
 	-- For each project in the workspace, for each file in the project, generate a compile command entry
 	-- Each entry contains:
@@ -218,54 +279,7 @@ function m.generate(wks, platform, buildcfg)
 	local commands = {}
 
 	for prj in p.workspace.eachproject(wks) do
-		if not p.action.supports(prj.language) then
-			p.warn("Project '%s' has unsupported language '%s', skipping", prj.name, prj.language)
-			return
-		end
-
-		if not p.action.supportsToolset(prj) then
-			p.warn("Project '%s' has unsupported toolset '%s', skipping", prj.name, prj.toolset)
-			return
-		end
-
-		local cfg = p.project.getconfig(prj, buildcfg, platform)
-		if not cfg then
-			p.error("No configuration found for project '%s' with build configuration '%s' and platform '%s'", prj.name, buildcfg, platform)
-			return
-		end
-    
-    	p.oven.assignObjectSequences(prj)
-
-		local tr = p.project.getsourcetree(prj)
-		p.tree.traverse(tr, {
-			onleaf = function(node)
-				local filecfg = p.fileconfig.getconfig(node, cfg)
-
-				local args = m.getcompilecommandsarguments(cfg, node.abspath, filecfg)
-				if not args then
-					return
-				end
-
-				local objfile = m.getobjectfile(cfg, node, filecfg)
-				if not objfile then
-					p.warn("Could not determine object file for '%s', skipping", node.abspath)
-					return
-				end
-
-				objfile = path.getabsolute(objfile)
-
-				args = table.join(args, { "-o", objfile })
-
-				local compile_command = {
-					directory = path.getabsolute(prj.location),
-					file = node.abspath,
-					arguments = args,
-					output = objfile,
-				}
-				
-				table.insert(commands, compile_command)
-			end
-		})
+		generateproject(wks, prj, platform, buildcfg, commands)
 	end
 
 	return commands
