@@ -116,38 +116,34 @@ function m.linkrule(cfg, toolset)
 	toolset = toolset or ninja.gettoolset(cfg)
 
 	if toolset == p.tools.msc then
-		if cfg.kind == p.STATICLIB then
-			local arname = toolset.gettoolname(cfg, "ar")
-			_p("rule ar_%s", cfg.toolset)
-			_p("  command = %s $in /nologo -OUT:$out", arname)
-			_p("  description = Archiving static library $out")
-			_p("")
-		else
-			local ldname = toolset.gettoolname(cfg, iif(cfg.language == "C", "cc", "cxx"))
-			_p("rule link_%s", cfg.toolset)
-			_p("  command = %s $in $links /link $ldflags /nologo /out:$out", ldname)
-			_p("  description = Linking target $out")
-			_p("")
-		end
-	else
-		if cfg.kind == p.STATICLIB then
-			local arname = toolset.gettoolname(cfg, "ar")
-			_p("rule ar_%s", cfg.toolset)
-			_p("  command = %s -rcs $out $in", arname)
-			_p("  description = Archiving static library $out")
-			_p("")
-		else
-			local ldname = toolset.gettoolname(cfg, iif(cfg.language == "C", "cc", "cxx"))
-			local commands = string.format("command = %s -o $out $in $links $ldflags", ldname);
-			
-			commands = commands:gsub("(.-)%s*$", "%1")
-			commands = commands:gsub("%s+", " ")
+		local arname = toolset.gettoolname(cfg, "ar")
+		_p("rule ar_%s", cfg.toolset)
+		_p("  command = %s $in /nologo -OUT:$out", arname)
+		_p("  description = Archiving static library $out")
+		_p("")
 
-			_p("rule link_%s", cfg.toolset)
-			_p("  %s", commands)
-			_p("  description = Linking target $out")
-			_p("")
-		end
+		local ldname = toolset.gettoolname(cfg, iif(cfg.language == "C", "cc", "cxx"))
+		_p("rule link_%s", cfg.toolset)
+		_p("  command = %s $in $links /link $ldflags /nologo /out:$out", ldname)
+		_p("  description = Linking target $out")
+		_p("")
+	else
+		local arname = toolset.gettoolname(cfg, "ar")
+		_p("rule ar_%s", cfg.toolset)
+		_p("  command = %s -rcs $out $in", arname)
+		_p("  description = Archiving static library $out")
+		_p("")
+
+		local ldname = toolset.gettoolname(cfg, iif(cfg.language == "C", "cc", "cxx"))
+		local commands = string.format("command = %s -o $out $in $links $ldflags", ldname);
+		
+		commands = commands:gsub("(.-)%s*$", "%1")
+		commands = commands:gsub("%s+", " ")
+
+		_p("rule link_%s", cfg.toolset)
+		_p("  %s", commands)
+		_p("  description = Linking target $out")
+		_p("")
 	end
 end
 
@@ -999,7 +995,7 @@ function m.checkCustomRuleFile(cfg, node, filecfg, outputTracking)
 	
 	local commands = {}
 	if buildcommands then
-		local translatedCommands = os.translateCommandsAndPaths(buildcommands, cfg.project.basedir, cfg.project.location)
+		local translatedCommands = os.translateCommandsAndPaths(buildcommands, cfg.workspace.basedir, cfg.workspace.location)
 		for _, cmd in ipairs(translatedCommands) do
 			table.insert(commands, cmd)
 		end
@@ -1103,7 +1099,7 @@ function m.buildCustomFile(cfg, node, filecfg, outputTracking)
 		end
 	end
 	
-	local commands = os.translateCommandsAndPaths(filecfg.buildcommands, cfg.project.basedir, cfg.project.location)
+	local commands = os.translateCommandsAndPaths(filecfg.buildcommands, cfg.workspace.basedir, cfg.workspace.location)
 	local cmdStr = buildCommandString(commands, nil, nil)
 	
 	_p("build %s: custom %s%s", table.concat(outputs, " "), relPath, deps)
@@ -1256,7 +1252,7 @@ function m.buildPreBuildEvents(cfg)
 		_p("build %s: prebuild%s", prebuildTarget, implicitDeps)
 		_p("  prebuildcommands = %s", cmdstr)
 	else
-		local commands = os.translateCommandsAndPaths(cfg.prebuildcommands, cfg.project.basedir, cfg.project.location)
+		local commands = os.translateCommandsAndPaths(cfg.prebuildcommands, cfg.workspace.basedir, cfg.workspace.location)
 		local cmdstr = buildCommandString(commands, cfg.prebuildmessage, prebuildTarget)
 		_p("build %s: prebuild%s", prebuildTarget, implicitDeps)
 		_p("  prebuildcommands = %s", cmdstr)
@@ -1286,7 +1282,7 @@ function m.buildPreLinkEvents(cfg, objectFiles)
 		_p("build %s: prelink%s", prelinkTarget, objDeps)
 		_p("  prelinkcommands = %s", cmdstr)
 	else
-		local commands = os.translateCommandsAndPaths(cfg.prelinkcommands, cfg.project.basedir, cfg.project.location)
+		local commands = os.translateCommandsAndPaths(cfg.prelinkcommands, cfg.workspace.basedir, cfg.workspace.location)
 		local cmdstr = buildCommandString(commands, cfg.prelinkmessage, prelinkTarget)
 
 		_p("build %s: prelink%s", prelinkTarget, objDeps)
@@ -1311,7 +1307,7 @@ function m.buildPostBuildEvents(cfg, targetPath)
 		_p("build %s: postbuild | %s", postbuildPhony, targetPath)
 		_p("  postbuildcommands = %s", cmdstr) 
 	else
-		local commands = os.translateCommandsAndPaths(cfg.postbuildcommands, cfg.project.basedir, cfg.project.location)
+		local commands = os.translateCommandsAndPaths(cfg.postbuildcommands, cfg.workspace.basedir, cfg.workspace.location)
 		local cmdstr = buildCommandString(commands, cfg.postbuildmessage, postbuildPhony)
 		_p("build %s: postbuild | %s", postbuildPhony, targetPath)
 		_p("  postbuildcommands = %s", cmdstr)
