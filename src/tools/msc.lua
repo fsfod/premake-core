@@ -428,6 +428,10 @@
 			table.insert(flags, '/NODEFAULTLIB:' .. ignore)
 		end
 
+		if cfg.kind ~= p.STATICLIB and cfg.Symbols == p.ON  then
+			table.insert(flags, "/PDB:".. path.join(p.tools.getrelative(cfg.project, cfg.buildtarget.directory),  cfg.buildtarget.basename..".pdb"))
+		end
+
 		if cfg.kind == "ConsoleApp" or cfg.kind == "WindowedApp" or cfg.kind == "SharedLib" then
 			if cfg.profile then
 				table.insert(flags, "/PROFILE")

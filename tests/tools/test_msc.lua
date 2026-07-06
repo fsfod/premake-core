@@ -265,6 +265,7 @@
 		symbols "On"
 		prepare()
 		test.contains("/DEBUG", msc.getldflags(cfg))
+		test.contains("/PDB:bin/Debug/MyProject.pdb", msc.getldflags(cfg))
 	end
 
 
