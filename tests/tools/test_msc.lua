@@ -268,6 +268,13 @@
 		test.contains("/PDB:bin/Debug/MyProject.pdb", msc.getldflags(cfg))
 	end
 
+	function suite.ldflags_onSymbolsPath()
+		symbols "On"
+		symbolspath "debug symbols/MyProject.pdb"
+		prepare()
+		test.contains('/PDB:"debug symbols/MyProject.pdb"', msc.getldflags(cfg))
+	end
+
 
 --
 -- Check handling warnings and errors.
